@@ -49,8 +49,8 @@ function tagBadgesHtml(tags){
 
 /* ============ 필터 상태 ============ */
 const activeFilters = {
-  pos: new Set(POS_OPTIONS),
-  day: new Set(DAY_OPTIONS),
+  pos: new Set(),     // 비어있으면 전체 표시
+  day: new Set(),     // 비어있으면 전체 표시
   status: new Set(), // 'unmemorized' | 'memorized' | 'hard' — 비어있으면 전체 표시
   tag: new Set()      // '독해빈출' 등 — 비어있으면 전체 표시
 };
@@ -69,15 +69,24 @@ function passesTag(tags){
   if(!tags || !tags.length) return false;
   return tags.some(t=>activeFilters.tag.has(t));
 }
+function passesPos(pos){
+  if(activeFilters.pos.size === 0) return true;
+  return activeFilters.pos.has(pos);
+}
+function passesDay(d){
+  if(activeFilters.day.size === 0) return true;
+  return activeFilters.day.has(d);
+}
+function passesDayList(days){
+  if(activeFilters.day.size === 0) return true;
+  return days.some(d=>activeFilters.day.has(d));
+}
 
 function toggleFilter(el){
   const group = el.dataset.filterGroup;
   const val = el.dataset.value;
   if(val === '__all__'){
-    if(group === 'day') activeFilters.day = new Set(DAY_OPTIONS);
-    else if(group === 'status') activeFilters.status = new Set();
-    else if(group === 'tag') activeFilters.tag = new Set();
-    else if(group === 'pos') activeFilters.pos = new Set(POS_OPTIONS);
+    activeFilters[group] = new Set();
   } else {
     const set = activeFilters[group];
     const v = group === 'day' ? parseInt(val,10) : val;
@@ -94,10 +103,7 @@ function syncFilterUI(group){
     const val = el.dataset.value;
     let active;
     if(val === '__all__'){
-      if(group === 'day') active = activeFilters.day.size === DAY_OPTIONS.length;
-      else if(group === 'status') active = activeFilters.status.size === 0;
-      else if(group === 'tag') active = activeFilters.tag.size === 0;
-      else if(group === 'pos') active = activeFilters.pos.size === POS_OPTIONS.length;
+      active = activeFilters[group].size === 0;
     } else {
       const v = group === 'day' ? parseInt(val,10) : val;
       active = activeFilters[group].has(v);
@@ -214,11 +220,11 @@ function applyListFilters(){
   const q = searchEl ? searchEl.value.trim().toLowerCase() : '';
   document.querySelectorAll('.day-section').forEach(sec=>{
     const d = parseInt(sec.dataset.day,10);
-    if(!activeFilters.day.has(d)){ sec.style.display='none'; return; }
+    if(!passesDay(d)){ sec.style.display='none'; return; }
     let vis=0;
     sec.querySelectorAll('.word-card').forEach(card=>{
       const wid = parseInt(card.dataset.wid,10);
-      const posOk = activeFilters.pos.has(card.dataset.pos);
+      const posOk = passesPos(card.dataset.pos);
       const statusOk = passesStatus(wid);
       const tagOk = passesTag(card.dataset.tags ? card.dataset.tags.split(';').filter(Boolean) : []);
       const searchOk = !q ||
@@ -277,8 +283,8 @@ let flashQueue = [], flashIndex = 0, isFlipped = false, furiganaOn = false;
 
 function buildFlashQueue(){
   flashQueue = VOCAB.filter(w=>
-    activeFilters.pos.has(w.pos) &&
-    w.day.some(d=>activeFilters.day.has(d)) &&
+    passesPos(w.pos) &&
+    passesDayList(w.day) &&
     passesStatus(w.id) &&
     passesTag(w.tags)
   );
