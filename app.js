@@ -37,12 +37,21 @@ function getCardColor(pos){
     'な형용사':'var(--purple)', '부사':'var(--teal)', '외래어':'var(--orange)', '표현':'var(--pink)'
   }[pos] || 'var(--border)';
 }
+function getTagColor(tag){
+  const map = { '독해빈출':'var(--pink)', '청해빈출':'var(--teal)', '필수문형':'var(--purple)' };
+  return map[tag] || 'var(--accent)';
+}
+function tagBadgesHtml(tags){
+  if(!tags || !tags.length) return '';
+  return tags.map(t=>`<span class="tag-badge" style="--tag-color:${getTagColor(t)}">#${t}</span>`).join('');
+}
 
 /* ============ 필터 상태 ============ */
 const activeFilters = {
   pos: new Set(POS_OPTIONS),
   day: new Set(DAY_OPTIONS),
-  status: new Set() // 'unmemorized' | 'memorized' | 'hard' — 비어있으면 전체 표시
+  status: new Set(), // 'unmemorized' | 'memorized' | 'hard' — 비어있으면 전체 표시
+  tag: new Set()      // '독해빈출' 등 — 비어있으면 전체 표시
 };
 
 function passesStatus(wid){
@@ -54,6 +63,11 @@ function passesStatus(wid){
   if(activeFilters.status.has('hard') && st.hard) ok = true;
   return ok;
 }
+function passesTag(tags){
+  if(activeFilters.tag.size === 0) return true;
+  if(!tags || !tags.length) return false;
+  return tags.some(t=>activeFilters.tag.has(t));
+}
 
 function toggleFilter(el){
   const group = el.dataset.filterGroup;
@@ -61,6 +75,7 @@ function toggleFilter(el){
   if(val === '__all__'){
     if(group === 'day') activeFilters.day = new Set(DAY_OPTIONS);
     else if(group === 'status') activeFilters.status = new Set();
+    else if(group === 'tag') activeFilters.tag = new Set();
     else if(group === 'pos') activeFilters.pos = new Set(POS_OPTIONS);
   } else {
     const set = activeFilters[group];
@@ -80,6 +95,7 @@ function syncFilterUI(group){
     if(val === '__all__'){
       if(group === 'day') active = activeFilters.day.size === DAY_OPTIONS.length;
       else if(group === 'status') active = activeFilters.status.size === 0;
+      else if(group === 'tag') active = activeFilters.tag.size === 0;
       else if(group === 'pos') active = activeFilters.pos.size === POS_OPTIONS.length;
     } else {
       const v = group === 'day' ? parseInt(val,10) : val;
@@ -94,8 +110,9 @@ function renderChipRow(containerId, group, items){
   if(!el) return;
   const allBtn = `<button class="chip" data-filter-group="${group}" data-value="__all__" onclick="toggleFilter(this)">전체</button>`;
   const rest = items.map(it=>{
-    const extraClass = group==='day' ? ' day-chip' : (group==='status' ? ' status-'+it.value : '');
-    return `<button class="chip${extraClass}" data-filter-group="${group}" data-value="${it.value}" onclick="toggleFilter(this)">${it.label}</button>`;
+    const extraClass = group==='day' ? ' day-chip' : (group==='status' ? ' status-'+it.value : (group==='tag' ? ' tag-chip' : ''));
+    const style = group==='tag' ? ` style="--tag-color:${getTagColor(it.value)}"` : '';
+    return `<button class="chip${extraClass}" data-filter-group="${group}" data-value="${it.value}"${style} onclick="toggleFilter(this)">${it.label}</button>`;
   }).join('');
   el.innerHTML = allBtn + rest;
 }
@@ -108,13 +125,16 @@ function initFilterChips(){
     {value:'memorized', label:'암기완료'},
     {value:'hard', label:'📍 잘 안외워짐'},
   ];
+  const tagItems = TAG_OPTIONS.map(t=>({value:t,label:'#'+t}));
   renderChipRow('list-pos-row','pos',posItems);
   renderChipRow('list-day-row','day',dayItems);
   renderChipRow('list-status-row','status',statusItems);
+  renderChipRow('list-tag-row','tag',tagItems);
   renderChipRow('flash-pos-row','pos',posItems);
   renderChipRow('flash-day-row','day',dayItems);
   renderChipRow('flash-status-row','status',statusItems);
-  syncFilterUI('pos'); syncFilterUI('day'); syncFilterUI('status');
+  renderChipRow('flash-tag-row','tag',tagItems);
+  syncFilterUI('pos'); syncFilterUI('day'); syncFilterUI('status'); syncFilterUI('tag');
 }
 
 /* ============ 헤더 ============ */
@@ -141,6 +161,7 @@ function buildWordCard(word){
   card.dataset.word = word.japanese;
   card.dataset.reading = word.furigana;
   card.dataset.meaning = word.korean;
+  card.dataset.tags = (word.tags||[]).join(';');
   card.style.setProperty('--card-color', getCardColor(word.pos));
   const st = getState(word.id);
   card.classList.toggle('memorized', st.level===3);
@@ -152,7 +173,7 @@ function buildWordCard(word){
     <div class="word-jp">${word.japanese}</div>
     <div class="word-reading">${word.furigana}</div>
     <div class="word-meaning">${word.korean}</div>
-    <div>${`<span class="pos-badge pos-${word.pos}">${word.pos}</span>`}${dayTags}</div>
+    <div>${`<span class="pos-badge pos-${word.pos}">${word.pos}</span>`}${dayTags}${tagBadgesHtml(word.tags)}</div>
   `;
   card.onclick = ()=>handleCardClick(word.id);
   return card;
@@ -198,11 +219,12 @@ function applyListFilters(){
       const wid = parseInt(card.dataset.wid,10);
       const posOk = activeFilters.pos.has(card.dataset.pos);
       const statusOk = passesStatus(wid);
+      const tagOk = passesTag(card.dataset.tags ? card.dataset.tags.split(';').filter(Boolean) : []);
       const searchOk = !q ||
         card.dataset.word.toLowerCase().includes(q) ||
         card.dataset.reading.toLowerCase().includes(q) ||
         card.dataset.meaning.toLowerCase().includes(q);
-      const ok = posOk && statusOk && searchOk;
+      const ok = posOk && statusOk && tagOk && searchOk;
       card.style.display = ok ? '' : 'none';
       if(ok) vis++;
     });
@@ -256,7 +278,8 @@ function buildFlashQueue(){
   flashQueue = VOCAB.filter(w=>
     activeFilters.pos.has(w.pos) &&
     w.day.some(d=>activeFilters.day.has(d)) &&
-    passesStatus(w.id)
+    passesStatus(w.id) &&
+    passesTag(w.tags)
   );
   flashIndex = 0;
 }
@@ -296,7 +319,8 @@ function renderFlashCard(){
     wordEl.textContent = w.japanese;
   }
   document.getElementById('f-pos').innerHTML = `<span class="pos-badge pos-${w.pos}">${w.pos}</span>`;
-  document.getElementById('f-day-tags').innerHTML = w.day.map(d=>`<span class="flash-day-tag">#${d}일</span>`).join('');
+  document.getElementById('f-day-tags').innerHTML =
+    w.day.map(d=>`<span class="flash-day-tag">#${d}일</span>`).join('') + tagBadgesHtml(w.tags);
   document.getElementById('f-reading').textContent = w.furigana;
   document.getElementById('f-meaning').textContent = w.korean;
 
