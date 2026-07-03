@@ -34,7 +34,8 @@ function dotsHtml(level){
 function getCardColor(pos){
   return {
     '명사':'var(--accent)', '동사':'var(--green)', 'い형용사':'var(--yellow)',
-    'な형용사':'var(--purple)', '부사':'var(--teal)', '외래어':'var(--orange)', '표현':'var(--pink)'
+    'な형용사':'var(--purple)', '부사':'var(--teal)', '외래어':'var(--orange)', '표현':'var(--pink)',
+    '문형':'var(--red)'
   }[pos] || 'var(--border)';
 }
 function getTagColor(tag){
@@ -318,6 +319,7 @@ function renderFlashCard(){
   } else {
     wordEl.textContent = w.japanese;
   }
+  wordEl.style.fontSize = w.japanese.length > 12 ? '24px' : (w.japanese.length > 7 ? '32px' : '');
   document.getElementById('f-pos').innerHTML = `<span class="pos-badge pos-${w.pos}">${w.pos}</span>`;
   document.getElementById('f-day-tags').innerHTML =
     w.day.map(d=>`<span class="flash-day-tag">#${d}일</span>`).join('') + tagBadgesHtml(w.tags);

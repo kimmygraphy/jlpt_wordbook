@@ -86,6 +86,7 @@ body { font-family: 'Noto Sans KR', 'Noto Sans JP', sans-serif; background: var(
 .pos-부사 { background: rgba(45,212,191,0.15); color: var(--teal); }
 .pos-외래어 { background: rgba(251,146,60,0.15); color: var(--orange); }
 .pos-표현 { background: rgba(244,114,182,0.15); color: var(--pink); }
+.pos-문형 { background: rgba(255,107,107,0.15); color: var(--red); }
 
 .day-tag { display: inline-block; font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 500; color: var(--text3); background: var(--surface3); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; margin-top: 5px; margin-right: 3px; vertical-align: middle; }
 .tag-badge { display: inline-block; font-size: 9px; font-weight: 700; color: var(--tag-color, var(--pink)); background: color-mix(in srgb, var(--tag-color, var(--pink)) 15%, transparent); border: 1px solid color-mix(in srgb, var(--tag-color, var(--pink)) 40%, transparent); border-radius: 4px; padding: 1px 5px; margin-top: 5px; margin-right: 3px; vertical-align: middle; }
