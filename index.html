@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
 <div class="header">
   <div class="header-left">
     <div class="logo">JLPT N4</div>
@@ -19,75 +20,63 @@
     <div class="progress-text" id="progress-text">0 / 0</div>
   </div>
 </div>
+
 <div class="tabs">
-  <button class="tab-btn active" onclick="switchTab('list')">📋 목록</button>
-  <button class="tab-btn" onclick="switchTab('flash')">🃏 플래시카드</button>
+  <button class="tab-btn active" onclick="switchTab('list', this)">📋 목록</button>
+  <button class="tab-btn" onclick="switchTab('flash', this)">🃏 플래시카드</button>
 </div>
+
+<!-- ===================== 목록 탭 ===================== -->
 <div id="tab-list" class="tab-panel active">
   <div class="filters">
-    <input class="search-input" type="text" placeholder="단어 검색..." id="search-input" oninput="applyFilters()">
-    <div class="filter-row">
-      <span class="filter-label">등급</span>
-      <button class="chip s active" data-filter-group="level" data-value="S" onclick="toggleFilter(this)">S급</button>
-      <button class="chip a active" data-filter-group="level" data-value="A" onclick="toggleFilter(this)">A급</button>
-      <button class="chip b active" data-filter-group="level" data-value="B" onclick="toggleFilter(this)">B급</button>
-      <button class="chip active" data-filter-group="level" data-value="기타한자" onclick="toggleFilter(this)">기타한자</button>
-      <button class="chip active" data-filter-group="level" data-value="히라가나" onclick="toggleFilter(this)">히라가나</button>
-      <button class="chip active" data-filter-group="level" data-value="부사" onclick="toggleFilter(this)">부사</button>
-      <button class="chip active" data-filter-group="level" data-value="외래어" onclick="toggleFilter(this)">외래어</button>
+    <input class="search-input" type="text" placeholder="단어 / 후리가나 / 뜻 검색..." id="search-input" oninput="applyListFilters()">
+    <div class="filter-row scroll">
+      <span class="filter-label">일자</span>
+      <div id="list-day-row" style="display:contents"></div>
     </div>
     <div class="filter-row">
       <span class="filter-label">품사</span>
-      <button class="chip active" data-filter-group="pos" data-value="명사" onclick="toggleFilter(this)">명사</button>
-      <button class="chip active" data-filter-group="pos" data-value="동사" onclick="toggleFilter(this)">동사</button>
-      <button class="chip active" data-filter-group="pos" data-value="い형" onclick="toggleFilter(this)">い형</button>
-      <button class="chip active" data-filter-group="pos" data-value="な형" onclick="toggleFilter(this)">な형</button>
-      <button class="chip active" data-filter-group="pos" data-value="부사" onclick="toggleFilter(this)">부사</button>
-      <button class="chip active" data-filter-group="pos" data-value="외래어" onclick="toggleFilter(this)">외래어</button>
+      <div id="list-pos-row" style="display:contents"></div>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">상태</span>
+      <div id="list-status-row" style="display:contents"></div>
     </div>
   </div>
   <div class="list-content" id="list-content"></div>
 </div>
+
+<!-- ===================== 플래시카드 탭 ===================== -->
 <div id="tab-flash" class="tab-panel">
   <div class="flash-content">
     <div class="flash-controls">
-      <button class="chip active" data-flash-filter="all" onclick="setFlashFilter('all',this)">전체</button>
-      <button class="chip" data-flash-filter="unmemorized" onclick="setFlashFilter('unmemorized',this)">미암기</button>
-      <button class="chip" data-flash-filter="memorized" onclick="setFlashFilter('memorized',this)">암기완료</button>
+      <button class="chip furigana-btn" id="furigana-toggle" onclick="toggleFurigana()">あ 후리가나</button>
       <button class="chip" onclick="shuffleFlash()">🔀 셔플</button>
-      <button class="chip" id="furigana-toggle" onclick="toggleFurigana()">🈶 후리가나</button>
       <span class="flash-stat" id="flash-stat">0 / 0</span>
     </div>
-    <div class="filters" style="position:static;">
-      <div class="filter-row">
-        <span class="filter-label">등급</span>
-        <button class="chip s active" data-filter-group="level" data-value="S" onclick="toggleFilter(this)">S급</button>
-        <button class="chip a active" data-filter-group="level" data-value="A" onclick="toggleFilter(this)">A급</button>
-        <button class="chip b active" data-filter-group="level" data-value="B" onclick="toggleFilter(this)">B급</button>
-        <button class="chip active" data-filter-group="level" data-value="기타한자" onclick="toggleFilter(this)">기타한자</button>
-        <button class="chip active" data-filter-group="level" data-value="히라가나" onclick="toggleFilter(this)">히라가나</button>
-        <button class="chip active" data-filter-group="level" data-value="부사" onclick="toggleFilter(this)">부사</button>
-        <button class="chip active" data-filter-group="level" data-value="외래어" onclick="toggleFilter(this)">외래어</button>
+
+    <div class="filters" style="position:static; width:100%;">
+      <div class="filter-row scroll">
+        <span class="filter-label">일자</span>
+        <div id="flash-day-row" style="display:contents"></div>
       </div>
       <div class="filter-row">
         <span class="filter-label">품사</span>
-        <button class="chip active" data-filter-group="pos" data-value="명사" onclick="toggleFilter(this)">명사</button>
-        <button class="chip active" data-filter-group="pos" data-value="동사" onclick="toggleFilter(this)">동사</button>
-        <button class="chip active" data-filter-group="pos" data-value="い형" onclick="toggleFilter(this)">い형</button>
-        <button class="chip active" data-filter-group="pos" data-value="な형" onclick="toggleFilter(this)">な형</button>
-        <button class="chip active" data-filter-group="pos" data-value="부사" onclick="toggleFilter(this)">부사</button>
-        <button class="chip active" data-filter-group="pos" data-value="외래어" onclick="toggleFilter(this)">외래어</button>
+        <div id="flash-pos-row" style="display:contents"></div>
+      </div>
+      <div class="filter-row">
+        <span class="filter-label">상태</span>
+        <div id="flash-status-row" style="display:contents"></div>
       </div>
     </div>
-    <div class="flash-day-row" id="flash-day-row"></div>
+
     <div class="flash-card-wrap">
       <div class="flash-card" id="flash-card" onclick="flipCard()">
         <div class="flash-face flash-front">
-          <div class="flash-group-tag" id="f-group">—</div>
+          <span class="flash-pin-indicator" id="f-pin-indicator">📍</span>
+          <div class="flash-top-row" id="f-day-tags"></div>
           <div class="flash-word" id="f-word">—</div>
-          <div class="flash-pos" id="f-pos-front"></div>
-          <div class="check-dots" id="f-mem-dots"></div>
-          <div class="flash-day-tag" id="f-day-tag" style="display:none"></div>
+          <div class="flash-pos" id="f-pos"></div>
           <div class="flash-hint">탭하여 뒤집기 👆</div>
         </div>
         <div class="flash-face flash-back">
@@ -97,15 +86,21 @@
         </div>
       </div>
     </div>
-    <div class="flash-counter" id="flash-counter">1 / 1</div>
+
+    <div class="flash-counter" id="flash-counter">0 / 0</div>
+
     <div class="flash-nav">
       <button class="nav-btn" onclick="prevCard()">← 이전</button>
-      <button class="nav-btn memorize-btn" id="memorize-btn" onclick="toggleMemorize()">✓ 외웠어요</button>
+      <button class="nav-btn memorize-btn" id="memorize-btn" onclick="cycleFlashMemorize()">☆ 체크하기</button>
       <button class="nav-btn" onclick="nextCard()">다음 →</button>
+    </div>
+    <div class="flash-nav">
+      <button class="nav-btn pin-toggle-btn" id="pin-toggle-btn" onclick="togglePinFlash()">📍 잘 안외워짐</button>
     </div>
     <div style="height:20px"></div>
   </div>
 </div>
+
 <script src="data.js"></script>
 <script src="app.js"></script>
 </body>
